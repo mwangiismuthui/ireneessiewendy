@@ -6,11 +6,15 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
-
+use Overtrue\LaravelLike\Traits\Liker;
+use Overtrue\LaravelFollow\Followable;
+use App\Post;
 class User extends Authenticatable
 {
     use HasApiTokens,Notifiable;
 
+    use Followable;
+    use Liker;
     /**
      * The attributes that are mass assignable.
      *
@@ -37,4 +41,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public function posts()
+    {
+            return $this->hasMany(Post::class);
+    }
 }
