@@ -17,11 +17,10 @@ class CreatePostsTable extends Migration
             $table->uuid('id')->primary();
             $table->integer('user_id');
             $table->string('type');
-            $table->string('status');
+            $table->string('status')->default('1');
             $table->string('text')->nullable();
             $table->string('tags')->nullable();
-            $table->string('image_url')->nullable();
-            $table->string('video_url')->nullable();
+            $table->string('file_path')->nullable();
             $table->string('location')->nullable();
             $table->string('views')->nullable();
             $table->string('dummy')->nullable();

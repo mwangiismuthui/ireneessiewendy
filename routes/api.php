@@ -14,6 +14,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+
+Route::prefix('v1')->group(function () {
+    Route::post('/newlogin', 'UserAuthController@userLogin');
+    Route::post('/newregister', 'UserAuthController@registerUser');   
+    Route::post('/forgotpassword', 'UserAuthController@forgot_password');
+    Route::post('/tokenconnfrm', 'UserAuthController@token_connfrm');
+    Route::post('/changePassword', 'UserAuthController@changePassword');
+  
+
+    Route::group(['middleware' => ['auth:api']], function(){
+        Route::post('/updateprofle', 'UserAuthController@updateProfile');
+        
+        Route::get('/', 'PostController@index');
+     
+        Route::post('/post/upload', 'PostController@store')->name('upload');
+    });
 });
