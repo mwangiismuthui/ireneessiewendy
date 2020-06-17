@@ -28,6 +28,8 @@ class PostResource extends JsonResource
             'backlink'=>$this->backlink,
             'thumbnails'=>$this->thumbnails,
             'videopreview'=>$this->videopreview,
+            'is_following_owner'=>$this->videopreview,
+            'is_liked_post'=>$this->videopreview,
             'file_path'=> $this->type == 'video' ? url('Postvideos', $this->file_path) :  ($this->type == 'image' ? url('Postimages', $this->file_path) : null),
             'updated_at'=>$this->updated_at->format('d M, yy'),
          ];
