@@ -29,6 +29,9 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/', 'PostController@index');
      
-        Route::post('/post/upload', 'PostController@store')->name('upload');
+        Route::post('/post/upload', 'PostController@store');
+        Route::get('/post/index', 'PostController@index');
+        Route::get('/post/like/{id}', 'PostController@LikePost');
+        Route::get('/user/follow/{id}', 'PostController@follow');
     });
 });
