@@ -38,15 +38,15 @@ class PostController extends Controller
         }
 
         $result = $merged->all();
-        return $result;
+        // return $result;
 
-        // $posts_results = PostResource::collection($results);
+        $posts_results = PostResource::collection($result);
 
-        // return response([
-        //     'error' => False,
-        //     'message' => 'Success',
-        //     'order' => $posts_results
-        // ], Response::HTTP_OK);
+        return response([
+            'error' => False,
+            'message' => 'Success',
+            'post' => $posts_results
+        ], Response::HTTP_OK);
     }
 
     /**
@@ -142,7 +142,7 @@ class PostController extends Controller
         $post->user_id = Auth::user()->id;
         $post->type = $request->type;
         $post->text = $request->text;
-        // $post->tags=
+        $post->tags= $request->tags;
         // $post->image_url=       
         // $post->location=
         // $post->views=

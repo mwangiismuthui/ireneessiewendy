@@ -109,7 +109,7 @@ class UserAuthController extends Controller
         } else {
             return response([
                 'error' => true,
-                'message' => 'User with this email not found!',
+                'message' => 'User with this username not found!',
             ], Response::HTTP_OK);
         }
     }

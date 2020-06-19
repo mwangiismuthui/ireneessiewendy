@@ -28,6 +28,7 @@ class PostRequest extends FormRequest
             'post' => 'required|max:10048',
             'type' => 'required',
             'text' => 'required',
+            'tags' => 'required',
         ];
     }
 }
