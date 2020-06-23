@@ -19,7 +19,7 @@ use App\Mail\SendMail;
 
 class UserAuthController extends Controller
 {
-   
+
 
     //----------------- [ Register user ] -------------------
     public function registerUser(UserRegisterRequest $request)
@@ -45,34 +45,53 @@ class UserAuthController extends Controller
             $user->gender =  $request->gender;
             $user->about = $request->about;
 
-                if (!$this->validateString($request->profile_pic_path)) {
-                    return response(["message" => "invalid base64 image string!"]);
-                } else {
-                    $user->profile_pic_path = $this->moveUploadedFile($request->profile_pic_path, "UserProfilePics");
-                    $user->save();
-                }
+            if (!$this->validateString($request->profile_pic_path)) {
+                return response(["message" => "invalid base64 image string!"]);
+            } else {
+                $user->profile_pic_path = $this->moveUploadedFile($request->profile_pic_path, "UserProfilePics");
+                $user->save();
+            }
 
-                return response([
-                    'error' => false,
-                    'message' => 'You have registered successfully',
-                    'user' => new UserRegisterResource($user)
-                ], Response::HTTP_CREATED);
-            
+            return response([
+                'error' => false,
+                'message' => 'You have registered successfully',
+                'user' => new UserRegisterResource($user)
+            ], Response::HTTP_CREATED);
         }
+    }
+
+    public function anonymousRegister(Request $request)
+    {
+
+        $user = new User();
+        $user->save();
+        return response([
+            'error' => false,
+            'message' => 'Anonymous registration successfully',
+            'user' => new UserRegisterResource($user)
+        ], Response::HTTP_CREATED);
     }
 
     // -------------- [ User Login ] ------------------
 
     public function userLogin(UserLoginRequest $request)
     {
-        $input              =       [
-            'email'         =>          $request->email,
-            'password'      =>          $request->password,
-        ];
+        // $input              =       [
+        //     'username'         =>          $request->username,
+        //     'password'      =>          $request->password,
+        // ];
 
-        $user_status = User::where('email', $request->email)->count();
+        $user_status = User::where('username', $request->username)->orwhere('email', $request->username)->count();
         if ($user_status > 0) {
-            if (Auth::attempt($input)) {
+            if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+                //user sent their email 
+                Auth::attempt(['email' => $request->username, 'password' => $request->password]);
+            } else {
+                //they sent their username instead 
+                Auth::attempt(['username' => $request->username, 'password' => $request->password]);
+            }
+            //was any of those correct ?
+            if (Auth::check()) {
 
                 // getting auth user after auth login
                 $user = Auth::user();
@@ -81,17 +100,16 @@ class UserAuthController extends Controller
                     'message' => 'Success! you are logged in successfully',
                     'user' => new UserLoginResoure($user)
                 ], Response::HTTP_OK);
-            }else {
+            } else {
                 return response([
                     'error' => true,
-                    'message' => 'Wrong email or password!',
+                    'message' => 'Wrong username or password!',
                 ], Response::HTTP_OK);
             }
-
         } else {
             return response([
                 'error' => true,
-                'message' => 'User with this email not found!',
+                'message' => 'User with this username not found!',
             ], Response::HTTP_OK);
         }
     }
@@ -110,7 +128,6 @@ class UserAuthController extends Controller
 
         if ($request->password != null) {
             $user->password = Hash::make($request->password);
-            
         }
         if ($request->profile_pic_path != null) {
             if (!$this->validateString($request->profile_pic_path)) {

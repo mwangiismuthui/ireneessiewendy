@@ -20,7 +20,7 @@ class CreateUsersTable extends Migration
             $table->string('profile_pic_path')->nullable();
             $table->boolean('is_active')->default(1);
             $table->boolean('is_verified')->default(0);
-            $table->string('username')->nullable();
+            $table->string('username')->unique()->nullable();
             $table->string('phone')->nullable();
             $table->string('DOB')->nullable();
             $table->string('gender')->nullable();

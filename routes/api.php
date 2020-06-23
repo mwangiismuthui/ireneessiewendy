@@ -17,7 +17,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('/newlogin', 'UserAuthController@userLogin');
+<<<<<<< HEAD
     Route::post('/newregister', 'UserAuthController@registerUser');
+=======
+    Route::post('/newregister', 'UserAuthController@registerUser');   
+    Route::post('/anonymousregister', 'UserAuthController@anonymousRegister');   
+>>>>>>> 76594badfb666872714e1d4c7296634a74f0e195
     Route::post('/forgotpassword', 'UserAuthController@forgot_password');
     Route::post('/tokenconnfrm', 'UserAuthController@token_connfrm');
     Route::post('/changePassword', 'UserAuthController@changePassword');
