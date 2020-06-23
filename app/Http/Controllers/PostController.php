@@ -11,6 +11,7 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Resources\FollowsResource;
 
 class PostController extends Controller
 {
@@ -22,31 +23,30 @@ class PostController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $merged =[];
+        $merged = [];
         if ($this->isNew($user)) {
             $trendingPost = $this->trending(3, 3);
             $latest = $this->latestPosts(2);
-        $merged = $trendingPost->merge($latest);
-        // dd('new');
+            $merged = $trendingPost->merge($latest);
+            // dd('new');
         } else {
             // dd('me');
-           $hashTags =$this->postUserTags($user,4);
-           $followingsPost = $this->getUserFollowingsPosts($user,3);
-           $latest2 = $this->latestPosts(3);
+            $hashTags = $this->postUserTags($user, 4);
+            $followingsPost = $this->getUserFollowingsPosts($user, 3);
+            $latest2 = $this->latestPosts(3);
 
-        $merged = $hashTags->merge($followingsPost)->merge($latest2);
+            $merged = $hashTags->merge($followingsPost)->merge($latest2);
         }
 
-        $result = $merged->all();
-        return $result;
+        $results = $merged->all();
 
-        // $posts_results = PostResource::collection($results);
+        $posts_results = PostResource::collection($results);
 
-        // return response([
-        //     'error' => False,
-        //     'message' => 'Success',
-        //     'order' => $posts_results
-        // ], Response::HTTP_OK);
+        return response([
+            'error' => False,
+            'message' => 'Success',
+            'order' => $posts_results
+        ], Response::HTTP_OK);
     }
 
     /**
@@ -58,18 +58,18 @@ class PostController extends Controller
     {
         //
     }
-   
-    public function getUserFollowingsPosts($user,$limit)
+
+    public function getUserFollowingsPosts($user, $limit)
     {
         $wenyeUnafuata =  $user->followings;
 
         $counter = 0;
-        $query = Post::select(); // Initializes the query
+        $query = Post::with('user')->select(); // Initializes the query
         foreach ($wenyeUnafuata as $following) {
             if ($counter == 0) {
-                $query->where('user_id',$following->id);
+                $query->where('user_id', $following->id);
             } else {
-                $query->orWhere('user_id',$following->id);
+                $query->orWhere('user_id', $following->id);
             }
             $counter++;
         }
@@ -79,7 +79,7 @@ class PostController extends Controller
     {
         $tags = $this->hashTags($user);
         $counter = 0;
-        $query = Post::select(); // Initializes the query
+        $query = Post::with('user')->select(); // Initializes the query
         foreach ($tags as $value) {
             if ($counter == 0) {
                 $query->where(DB::raw("CONCAT_WS(' ', tags)"), 'LIKE', '%' . $value . '%');
@@ -112,7 +112,7 @@ class PostController extends Controller
     }
     public function latestPosts($limit)
     {
-        $latest = Post::orderBy('created_at', 'Desc')
+        $latest = Post::with('user')->orderBy('posts.created_at', 'Desc')
             ->limit($limit)
             ->get();
         return $latest;
@@ -121,11 +121,23 @@ class PostController extends Controller
     {
 
         $number_of_days = \Carbon\Carbon::today()->subDays($duration);
-        $trendingPost = Post::where('created_at', '>=', $number_of_days)
+        $trendingPost = Post::with('user')->where('posts.created_at', '>=', $number_of_days)
             ->orderBy('views', 'Desc')
             ->limit($limit)
             ->get();
         return $trendingPost;
+    }
+    public function getTrending()
+    {
+        $trending = $this->trending(8, 1000);
+
+        $posts_trending = PostResource::collection($trending);
+
+        return response([
+            'error' => False,
+            'message' => 'Success',
+            'order' => $posts_trending
+        ], Response::HTTP_OK);
     }
 
     /**
@@ -212,23 +224,24 @@ class PostController extends Controller
             ], Response::HTTP_OK);
         }
     }
-    public function follow($id){
+    public function follow($id)
+    {
 
         $user = User::find($id);
         $me = Auth::user();
-       if ($user) {
-            if ($me->isFollowing($user)) {               
+        if ($user) {
+            if ($me->isFollowing($user)) {
                 $me->toggleFollow($user);
                 return response([
                     'error' => False,
-                    'message' => $user->username.' '.'UnFollowed',
+                    'message' => $user->username . ' ' . 'UnFollowed',
                 ], Response::HTTP_OK);
             } else {
-                        
+
                 $me->toggleFollow($user);
                 return response([
                     'error' => False,
-                    'message' => $user->username.' '.'Followed',
+                    'message' => $user->username . ' ' . 'Followed',
                 ], Response::HTTP_OK);
             }
         } else {
@@ -237,8 +250,7 @@ class PostController extends Controller
                 'message' => 'User not found',
             ], Response::HTTP_OK);
         }
- 
-     }
+    }
     /**
      * Show the form for editing the specified resource.
      *
@@ -314,4 +326,37 @@ class PostController extends Controller
             return false;
         }
     }
+
+    public function followers($user_id)
+    {
+        $user = User::find($user_id);
+        $followers = $user->followers()->withCount('followers')->orderByDesc('followers_count')->get();
+       $followers_resource = FollowsResource::collection($followers);
+        return response([
+            'error' => False,
+            'followers' => $followers_resource,
+            ], Response::HTTP_OK);
+    }
+    public function followings($user_id)
+    {
+        $user = User::find($user_id);
+        $following = $user->followings()->withCount('followings')->orderByDesc('followings_count')->get();
+        $followings_resource = FollowsResource::collection($following);
+        return response([
+            'error' => False,
+            'followings' => $followings_resource,
+            ], Response::HTTP_OK);
+    }
+    public function profile($user_id)
+    {
+      $posts = Post::where('user_id',$user_id)->withCount('likers')->orderBy('id', 'DESC')->get();
+      $usersdetails = User::where('id', $user_id)->withCount('followers')->withCount('followings')->get();
+      $userposts_resource = PostResource::collection($posts);
+      $usersdetails_resource = FollowsResource::collection($usersdetails);
+      return response([
+          'error' => False,
+          'profile' => $usersdetails_resource,
+          'posts' => $userposts_resource,
+          ], Response::HTTP_OK);
+   }
 }
