@@ -11,6 +11,8 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Resources\FollowsResource;
+use App\Http\Resources\TrendingUsersResource;
 
 class PostController extends Controller
 {
@@ -22,7 +24,7 @@ class PostController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $merged =[];
+        $merged = [];
         if ($this->isNew($user)) {
             $trendingPost = $this->trending(3, 70);
             $latest = $this->latestPosts(30);
@@ -34,7 +36,7 @@ class PostController extends Controller
            $followingsPost = $this->getUserFollowingsPosts($user,30);
            $latest2 = $this->latestPosts(30);
 
-        $merged = $hashTags->merge($followingsPost)->merge($latest2);
+            $merged = $hashTags->merge($followingsPost)->merge($latest2);
         }
 
         $result = $merged->all();
@@ -58,18 +60,18 @@ class PostController extends Controller
     {
         //
     }
-   
-    public function getUserFollowingsPosts($user,$limit)
+
+    public function getUserFollowingsPosts($user, $limit)
     {
         $wenyeUnafuata =  $user->followings;
 
         $counter = 0;
-        $query = Post::select(); // Initializes the query
+        $query = Post::with('user')->select(); // Initializes the query
         foreach ($wenyeUnafuata as $following) {
             if ($counter == 0) {
-                $query->where('user_id',$following->id);
+                $query->where('user_id', $following->id);
             } else {
-                $query->orWhere('user_id',$following->id);
+                $query->orWhere('user_id', $following->id);
             }
             $counter++;
         }
@@ -79,7 +81,7 @@ class PostController extends Controller
     {
         $tags = $this->hashTags($user);
         $counter = 0;
-        $query = Post::select(); // Initializes the query
+        $query = Post::with('user')->select(); // Initializes the query
         foreach ($tags as $value) {
             if ($counter == 0) {
                 $query->where(DB::raw("CONCAT_WS(' ', tags)"), 'LIKE', '%' . $value . '%');
@@ -112,7 +114,7 @@ class PostController extends Controller
     }
     public function latestPosts($limit)
     {
-        $latest = Post::orderBy('created_at', 'Desc')
+        $latest = Post::with('user')->orderBy('posts.created_at', 'Desc')
             ->limit($limit)
             ->get();
         return $latest;
@@ -121,13 +123,147 @@ class PostController extends Controller
     {
 
         $number_of_days = \Carbon\Carbon::today()->subDays($duration);
-        $trendingPost = Post::where('created_at', '>=', $number_of_days)
+        $trendingPost = Post::with('user')->where('posts.created_at', '>=', $number_of_days)
             ->orderBy('views', 'Desc')
             ->limit($limit)
             ->get();
         return $trendingPost;
     }
+    public function getTrending()
+    {
+        $trending = $this->trending(8, 100);
 
+        $posts_trending = PostResource::collection($trending);
+
+        return response([
+            'error' => False,
+            'message' => 'Success',
+            'post' => $posts_trending
+        ], Response::HTTP_OK);
+    }
+
+    public function trendingUsers(){
+        $trending_posts = $this->trending(8, 100);
+        $trending_users = collect(new User);
+        foreach($trending_posts as $post){
+            $trending_users->add( $post->user);
+        }
+        $users = TrendingUsersResource::collection($trending_users->unique()); 
+
+        if(!is_null($trending_users)){
+            return response([
+                'error' => False,
+                'message' => 'Success',
+                'users' => $users
+            ], Response::HTTP_OK);
+        }else{
+            return response([
+                'error' => true,
+                'message' => 'No records found',
+            ], Response::HTTP_OK);
+        }
+        
+    }
+
+    public function userPosts($user_id)
+    {
+        $user = User::find($user_id);
+        $posts = PostResource::collection($user->posts);
+        if ($user) {
+            if(!is_null($posts)){
+                return response([
+                    'error' => False,
+                    'message' => 'Success',
+                    'post' => $posts
+                ], Response::HTTP_OK);
+            }else{
+                return response([
+                    'error' => true,
+                    'message' => 'No records found',
+                ], Response::HTTP_OK);
+            }
+        } else {
+            return response([
+                'error' => true,
+                'message' => 'User not found!',
+            ], Response::HTTP_OK);
+        }
+        
+        
+    }
+
+    public function trendingHashtags()
+    {
+        $tags = [];
+        $posts = $this->trending(7,100);
+        foreach($posts as $post){
+            $seperatedtags = array_diff(explode(",",$post->tags),array(""));
+            foreach($seperatedtags as $tag){
+                $tags[]=$tag;
+            }
+        }
+
+        $ourHashtags = array_values(array_unique($tags));
+        $data= [];
+        foreach($ourHashtags as $hasgtag){
+            $data[] = [
+                'tag'=> $hasgtag,
+                'post_count'=> Post::where('tags', 'like', '%' . $hasgtag . '%')->count()
+            ];
+        }
+
+        if(!is_null($data)){
+            return response([
+                'error' => False,
+                'message' => 'Success',
+                'tag' => $data
+            ], Response::HTTP_OK);
+        }else{
+            return response([
+                'error' => true,
+                'message' => 'No tags found',
+            ], Response::HTTP_OK);
+        }
+
+    }
+
+    public function hashtagPosts($hashtag_string)
+    {
+        $posts = Post::where('tags', 'like', '%' . $hashtag_string . '%')->get();
+        $data = PostResource::collection($posts);
+        if(!is_null($data)){
+            return response([
+                'error' => False,
+                'message' => 'Success',
+                'post' => $data
+            ], Response::HTTP_OK);
+        }else{
+            return response([
+                'error' => true,
+                'message' => 'No posts found',
+            ], Response::HTTP_OK);
+        }
+    }
+
+    public function normalSearch($query_text)
+    {
+        $posts = Post::where('tags', 'like', '%' . $query_text . '%')
+                        ->orWhere('text', 'like', '%' . $query_text . '%')
+                        ->get();
+        $data = PostResource::collection($posts);
+        if(!is_null($data)){
+            return response([
+                'error' => False,
+                'message' => 'Success',
+                'post' => $data
+            ], Response::HTTP_OK);
+        }else{
+            return response([
+                'error' => true,
+                'message' => 'No posts found',
+            ], Response::HTTP_OK);
+        }
+    }
     /**
      * Store a newly created resource in storage.
      *
@@ -212,23 +348,24 @@ class PostController extends Controller
             ], Response::HTTP_OK);
         }
     }
-    public function follow($id){
+    public function follow($id)
+    {
 
         $user = User::find($id);
         $me = Auth::user();
-       if ($user) {
-            if ($me->isFollowing($user)) {               
+        if ($user) {
+            if ($me->isFollowing($user)) {
                 $me->toggleFollow($user);
                 return response([
                     'error' => False,
-                    'message' => $user->username.' '.'UnFollowed',
+                    'message' => $user->username . ' ' . 'UnFollowed',
                 ], Response::HTTP_OK);
             } else {
-                        
+
                 $me->toggleFollow($user);
                 return response([
                     'error' => False,
-                    'message' => $user->username.' '.'Followed',
+                    'message' => $user->username . ' ' . 'Followed',
                 ], Response::HTTP_OK);
             }
         } else {
@@ -237,8 +374,7 @@ class PostController extends Controller
                 'message' => 'User not found',
             ], Response::HTTP_OK);
         }
- 
-     }
+    }
     /**
      * Show the form for editing the specified resource.
      *
@@ -272,6 +408,8 @@ class PostController extends Controller
     {
         //
     }
+
+   
 
     public function generateUniqueFileName($file, $destinationPath)
     {
@@ -314,4 +452,38 @@ class PostController extends Controller
             return false;
         }
     }
+
+    public function followers($user_id)
+    {
+        $user = User::find($user_id);
+        $followers = $user->followers()->withCount('followers')->orderByDesc('followers_count')->get();
+       $followers_resource = FollowsResource::collection($followers);
+        return response([
+            'error' => False,
+            'followers' => $followers_resource,
+            ], Response::HTTP_OK);
+    }
+    public function followings($user_id)
+    {
+        $user = User::find($user_id);
+        $following = $user->followings()->withCount('followings')->orderByDesc('followings_count')->get();
+        $followings_resource = FollowsResource::collection($following);
+        return response([
+            'error' => False,
+            'followings' => $followings_resource,
+            ], Response::HTTP_OK);
+    }
+
+    public function profile($user_id)
+    {
+      $posts = Post::where('user_id',$user_id)->withCount('likers')->orderBy('id', 'DESC')->get();
+      $usersdetails = User::where('id', $user_id)->withCount('followers')->withCount('followings')->get();
+      $userposts_resource = PostResource::collection($posts);
+      $usersdetails_resource = FollowsResource::collection($usersdetails);
+      return response([
+          'error' => False,
+          'profile' => $usersdetails_resource,
+          'posts' => $userposts_resource,
+          ], Response::HTTP_OK);
+   }
 }

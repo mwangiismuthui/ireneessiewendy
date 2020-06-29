@@ -28,6 +28,7 @@ class PostResource extends JsonResource
             'text'=>$this->text,
             'tags'=>$this->tags,
             'location'=>$this->location,
+            'profile_picture'=>url('UserProfilePics',$this->user->profile_pic_path),
             'views'=>$this->views,
             'has_link'=>$this->has_link,
             'background_color'=>$this->background_color,
