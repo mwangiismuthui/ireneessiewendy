@@ -24,15 +24,15 @@ class PostController extends Controller
         $user = Auth::user();
         $merged =[];
         if ($this->isNew($user)) {
-            $trendingPost = $this->trending(3, 3);
-            $latest = $this->latestPosts(2);
+            $trendingPost = $this->trending(3, 70);
+            $latest = $this->latestPosts(30);
         $merged = $trendingPost->merge($latest);
         // dd('new');
         } else {
             // dd('me');
-           $hashTags =$this->postUserTags($user,4);
-           $followingsPost = $this->getUserFollowingsPosts($user,3);
-           $latest2 = $this->latestPosts(3);
+           $hashTags =$this->postUserTags($user,40);
+           $followingsPost = $this->getUserFollowingsPosts($user,30);
+           $latest2 = $this->latestPosts(30);
 
         $merged = $hashTags->merge($followingsPost)->merge($latest2);
         }
@@ -174,7 +174,7 @@ class PostController extends Controller
             // ConvertVideoForStreaming::dispatch($post);
             return response([
                 'error' => False,
-                'message' => 'Post upload success, your video will be available shortly after we process it',
+                'message' => 'Post upload success',
                 'post' => new PostResource($post)
             ], Response::HTTP_OK);
         } else {
