@@ -28,7 +28,7 @@ class PostController extends Controller
         if ($this->isNew($user)) {
             $trendingPost = $this->trending(3, 70);
             $latest = $this->latestPosts(30);
-        $merged = $trendingPost->merge($latest);
+        $merged = $latest->merge($trendingPost);
         // dd('new');
         } else {
             // dd('me');
@@ -36,10 +36,10 @@ class PostController extends Controller
            $followingsPost = $this->getUserFollowingsPosts($user,30);
            $latest2 = $this->latestPosts(30);
 
-            $merged = $hashTags->merge($followingsPost)->merge($latest2);
+            $merged = $latest2->merge($hashTags)->merge($followingsPost);
         }
 
-        $result = $merged->all();
+        $result = $merged->unique();
         // return $result;
 
         $posts_results = PostResource::collection($result);
@@ -150,7 +150,7 @@ class PostController extends Controller
         }
         $users = TrendingUsersResource::collection($trending_users->unique()); 
 
-        if(!is_null($trending_users)){
+        if(sizeof($trending_users) >0){
             return response([
                 'error' => False,
                 'message' => 'Success',
@@ -170,7 +170,7 @@ class PostController extends Controller
         $user = User::find($user_id);
         $posts = PostResource::collection($user->posts);
         if ($user) {
-            if(!is_null($posts)){
+            if(sizeof($posts)>0){
                 return response([
                     'error' => False,
                     'message' => 'Success',
@@ -212,7 +212,7 @@ class PostController extends Controller
             ];
         }
 
-        if(!is_null($data)){
+        if(sizeof($data) >0){
             return response([
                 'error' => False,
                 'message' => 'Success',
@@ -231,7 +231,7 @@ class PostController extends Controller
     {
         $posts = Post::where('tags', 'like', '%' . $hashtag_string . '%')->get();
         $data = PostResource::collection($posts);
-        if(!is_null($data)){
+        if(sizeof($data) >0){
             return response([
                 'error' => False,
                 'message' => 'Success',
@@ -251,7 +251,7 @@ class PostController extends Controller
                         ->orWhere('text', 'like', '%' . $query_text . '%')
                         ->get();
         $data = PostResource::collection($posts);
-        if(!is_null($data)){
+        if(sizeof($data) >0){
             return response([
                 'error' => False,
                 'message' => 'Success',
