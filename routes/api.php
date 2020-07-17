@@ -32,6 +32,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/post/upload', 'PostController@store');
         Route::get('/post/index', 'PostController@index');
         Route::get('/post/like/{id}', 'PostController@LikePost');
+        Route::get('/post/share/{id}', 'ShareController@store');
         Route::get('/user/follow/{id}', 'PostController@follow');
         Route::get('/trending/posts', 'PostController@getTrending');
         Route::get('/followers/{user_id}', 'PostController@followers');

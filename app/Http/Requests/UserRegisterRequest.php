@@ -28,7 +28,7 @@ class UserRegisterRequest extends FormRequest
             'lastname' =>  'required|min:3',
             'email' =>      'required|email',
             'profile_pic_path' =>   'required',
-            'username' =>     'required|min:3',
+            'username' =>     'required|unique:users,username|min:3',
             'phone' =>      'required',
             'DOB' =>      'required',
             'gender' =>      'required',

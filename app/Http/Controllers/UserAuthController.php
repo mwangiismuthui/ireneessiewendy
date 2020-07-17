@@ -117,32 +117,44 @@ class UserAuthController extends Controller
 
     public function updateProfile(Request $request)
     {
-        $user = Auth::user();
-        $user->username =  $request->username;
-        $user->phone = $request->phone;
-        $user->DOB = $request->DOB;
-        $user->gender =  $request->gender;
-        $user->about = $request->about;
-        $user->firstname = $request->firstname;
-        $user->lastname = $request->lastname;
+        $rules = [
+            'username'    =>  'unique:users,username',
+        ];
+        $error = Validator::make($request->all(), $rules);
 
-        if ($request->password != null) {
-            $user->password = Hash::make($request->password);
-        }
-        if ($request->profile_pic_path != null) {
-            if (!$this->validateString($request->profile_pic_path)) {
-                return response(["message" => "invalid base64 image string!"]);
-            } else {
-                $user->profile_pic_path = $this->moveUploadedFile($request->profile_pic_path, "UserProfilePics");
+        if ($error->fails()) {
+            return response([
+                'error' => true,
+                'message' => 'The username has already been taken.',
+            ], Response::HTTP_CREATED);
+        } else {
+            $user = Auth::user();
+            $user->username =  $request->username;
+            $user->phone = $request->phone;
+            $user->DOB = $request->DOB;
+            $user->gender =  $request->gender;
+            $user->about = $request->about;
+            $user->firstname = $request->firstname;
+            $user->lastname = $request->lastname;
+
+            if ($request->password != null) {
+                $user->password = Hash::make($request->password);
             }
-        }
-        $user->update();
+            if ($request->profile_pic_path != null) {
+                if (!$this->validateString($request->profile_pic_path)) {
+                    return response(["message" => "invalid base64 image string!"]);
+                } else {
+                    $user->profile_pic_path = $this->moveUploadedFile($request->profile_pic_path, "UserProfilePics");
+                }
+            }
+            $user->update();
 
-        return response([
-            'error' => false,
-            'message' => 'Profile updated successfully',
-            'user' => new UserLoginResoure($user)
-        ], Response::HTTP_CREATED);
+            return response([
+                'error' => false,
+                'message' => 'Profile updated successfully',
+                'user' => new UserLoginResoure($user)
+            ], Response::HTTP_CREATED);
+        }
     }
 
     public function forgot_password(Request $request)

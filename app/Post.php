@@ -8,6 +8,7 @@ use Overtrue\LaravelLike\Traits\Likeable;
 use App\Traits\UsesUUID;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\User;
+use App\Share;
 
 class Post extends Model
 {
@@ -23,5 +24,10 @@ class Post extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function sharesCount()
+    {
+        return $this->hasOne(Share::class);
     }
 }
