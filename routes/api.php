@@ -33,11 +33,15 @@ Route::prefix('v1')->group(function () {
         Route::get('/post/index', 'PostController@index');
         Route::get('/post/like/{id}', 'PostController@LikePost');
         Route::get('/post/share/{id}', 'ShareController@store');
+        Route::get('/post/download/{id}', 'DownlodController@store');
         Route::get('/user/follow/{id}', 'PostController@follow');
         Route::get('/trending/posts', 'PostController@getTrending');
         Route::get('/followers/{user_id}', 'PostController@followers');
         Route::get('/followings/{user_id}', 'PostController@followings');
         Route::get('/profile/{user_id}', 'PostController@profile');
+
+        Route::get('/all/leaderBoards', 'LeaderBoardController@index');
+        Route::post('/enroll/leaderBoard', 'LeaderBoardController@store');
 
 
         Route::get('/trending-users', 'PostController@trendingUsers');

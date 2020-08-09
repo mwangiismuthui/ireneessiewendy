@@ -9,6 +9,7 @@ use App\Traits\UsesUUID;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\User;
 use App\Share;
+use App\Downlod;
 
 class Post extends Model
 {
@@ -29,5 +30,9 @@ class Post extends Model
     public function sharesCount()
     {
         return $this->hasOne(Share::class);
+    }
+    public function downloadsCount()
+    {
+        return $this->hasOne(Downlod::class);
     }
 }
