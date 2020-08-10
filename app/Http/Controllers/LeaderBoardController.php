@@ -54,25 +54,34 @@ class LeaderBoardController extends Controller
     public function store(LeaderBoardRequest $request)
     {
         //enroll to leaderboard
-
-        $leaderBoard = new LeaderBoard();
-        $leaderBoard->user_id = Auth::user()->id;
-        $leaderBoard->lati = $request->lati;
-        $leaderBoard->longi = $request->longi;
-
-        if ($leaderBoard->save()) {
-            return response([
-                'error' => False,
-                'message' => 'Success, You are now on leaderboard.',
-                'user' => new LeaderBoardResource($leaderBoard)
-            ], Response::HTTP_OK);
-        } else {
+        $userID = Auth::user()->id;
+        $status = LeaderBoard::where('user_id', $userID)->count();
+        if ($status > 0) {
             return response([
                 'error' => true,
-                'message' => 'failed, try again later!',
+                'message' => 'You already enrolled in leaderboard.',
             ], Response::HTTP_OK);
+        } else {
+            # code...
+
+            $leaderBoard = new LeaderBoard();
+            $leaderBoard->user_id = $userID;
+            $leaderBoard->lati = $request->lati;
+            $leaderBoard->longi = $request->longi;
+
+            if ($leaderBoard->save()) {
+                return response([
+                    'error' => False,
+                    'message' => 'Success, You are now in leaderboard.',
+                    'user' => new LeaderBoardResource($leaderBoard)
+                ], Response::HTTP_OK);
+            } else {
+                return response([
+                    'error' => true,
+                    'message' => 'failed, try again later!',
+                ], Response::HTTP_OK);
+            }
         }
-        
     }
 
     /**
@@ -94,7 +103,6 @@ class LeaderBoardController extends Controller
      */
     public function edit(LeaderBoard $leaderBoard)
     {
-        
     }
 
     /**

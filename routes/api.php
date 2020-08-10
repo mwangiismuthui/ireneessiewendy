@@ -39,6 +39,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/followers/{user_id}', 'PostController@followers');
         Route::get('/followings/{user_id}', 'PostController@followings');
         Route::get('/profile/{user_id}', 'PostController@profile');
+        Route::get('/refered-post/similar/posts/{post_id}', 'PostController@postFormRequestPostId');
 
         Route::get('/all/leaderBoards', 'LeaderBoardController@index');
         Route::post('/enroll/leaderBoard', 'LeaderBoardController@store');

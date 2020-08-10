@@ -274,6 +274,29 @@ class PostController extends Controller
             ], Response::HTTP_OK);
         }
     }
+
+    public function postFormRequestPostId($post_id)
+    {   
+        $status = Post::where('id',$post_id)->exists();
+        
+        if ($status) {
+            $user_id = Post::where('id',$post_id)->pluck('user_id')->first();
+            $user = User::find($user_id);
+            $posts = PostResource::collection(getUserFollowingsPosts($user, 100));
+            return response([
+                'error' => false,
+                'message' => 'success',
+                'post' => $posts,
+            ], Response::HTTP_OK);
+        } else {
+            return response([
+                'error' => true,
+                'message' => 'The post is not found.',
+            ], Response::HTTP_OK);
+        }       
+       
+
+    }
     /**
      * Store a newly created resource in storage.
      *
@@ -385,40 +408,6 @@ class PostController extends Controller
             ], Response::HTTP_OK);
         }
     }
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Post $post)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Post $post)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Post $post)
-    {
-        //
-    }
-
 
 
     public function generateUniqueFileName($file, $destinationPath)

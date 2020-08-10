@@ -20,3 +20,7 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/meme/{id}', function () {
+   return Redirect::to('https://play.google.com/store/apps/details?id=com.trichain.kenyasihami');
+});
