@@ -50,5 +50,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/trending-tags', 'PostController@trendingHashtags');
         Route::get('/tags-posts/{tag}', 'PostController@hashtagPosts');
         Route::get('/search-posts/{query}', 'PostController@normalSearch');
+        Route::get('/report-user/{user_id}', 'PostController@reportUser');
+        Route::get('/report-post/{post_id}', 'PostController@reportPost');
     });
 });

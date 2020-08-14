@@ -278,6 +278,52 @@ class PostController extends Controller
         }
     }
 
+    public function reportUser($user_id)
+    {
+        $user_exists = User::where('id', $user_id)->exists();
+        
+        if ($user_exists) {
+            $user = User::where('id', $user_id)->first();
+            $user->is_reported = 1;
+            $user->update(); 
+            return response([
+                'error' => False,
+                'message' => 'User reported'
+            ], Response::HTTP_OK);
+
+        } else {
+            return response([
+                'error' => true,
+                'message' => 'The user is not found.',
+            ], Response::HTTP_OK);
+        }    
+          
+    }
+
+
+    public function reportPost($post_id)
+    {
+        
+        $postexists = Post::where('id',$post_id)->exists();
+        
+        if ($postexists) {
+            $post = Post::where('id',$post_id)->first();
+            $post->is_reported = 1;
+            $post->update(); 
+            return response([
+                'error' => False,
+                'message' => 'Post reported'
+            ], Response::HTTP_OK);
+
+        } else {
+            return response([
+                'error' => true,
+                'message' => 'The post is not found.',
+            ], Response::HTTP_OK);
+        }    
+           
+    }
+
     public function postFromRequestPostId($post_id)
     {   
         $status = Post::where('id',$post_id)->exists();

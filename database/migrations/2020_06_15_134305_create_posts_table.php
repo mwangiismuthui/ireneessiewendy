@@ -18,6 +18,7 @@ class CreatePostsTable extends Migration
             $table->integer('user_id');
             $table->string('type');
             $table->string('status')->default('1');
+            $table->boolean('is_reported')->default(0);
             $table->string('text')->nullable();
             $table->string('tags')->nullable();
             $table->string('file_path')->nullable();
