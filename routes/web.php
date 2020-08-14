@@ -13,14 +13,24 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+
+
+Auth::routes(['verify' => true, 'register' => false,'login' => false]);
+Route::match(['get', 'post'], 'login', function(){
+    return redirect('/');
 });
 
-Auth::routes();
-
+Route::get('/', 'HomeController@redirectPlayStore')->name('redirectPlayStore');
 Route::get('/home', 'HomeController@index')->name('home');
+
+
+
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+});
 
 Route::get('/meme/{id}', function () {
    return Redirect::to('https://play.google.com/store/apps/details?id=com.trichain.kenyasihami');
 });
+
+

@@ -199,6 +199,9 @@ class PostController extends Controller
         foreach ($posts as $post) {
             if ($post->tags != null) {
                 $seperatedtags = array_unique(explode(',', $post->tags), SORT_REGULAR);
+            }else{
+                $seperatedtags = [];
+                
             }
             
             foreach ($seperatedtags as $tag) {
@@ -275,14 +278,13 @@ class PostController extends Controller
         }
     }
 
-    public function postFormRequestPostId($post_id)
+    public function postFromRequestPostId($post_id)
     {   
         $status = Post::where('id',$post_id)->exists();
         
         if ($status) {
             $user_id = Post::where('id',$post_id)->pluck('user_id')->first();
-            $user = User::find($user_id);
-            $posts = PostResource::collection(getUserFollowingsPosts($user, 100));
+            $posts = PostResource::collection(Post::where('user_id',$user_id)->get());
             return response([
                 'error' => false,
                 'message' => 'success',
