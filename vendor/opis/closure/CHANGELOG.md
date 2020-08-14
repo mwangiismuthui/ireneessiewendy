@@ -1,5 +1,12 @@
 CHANGELOG
 ---------
+### v3.5.6, 2020.08.11
+
+- Fixed issue [#70](https://github.com/opis/closure/issues/70)
+
+### v3.5.5, 2020.06.17
+
+- Fixed a false-positive when using `Opis\Closure\ReflectionClosure::isScopeRequired` method
 
 ### v3.5.4, 2020.06.07
 
